@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Weather things</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+        #submit {
+            margin: 5px;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row justify-content-md-center">
+            <div class="col-md-auto">
+                <h3>Please input a US zipcode</h3>
+                <input type="text" name="" placeholder="US ZipCode" id="zipcode" />
+                <br>
+                <button type="button" class="btn btn-primary" id="submit">Submit</button>
+            </div>
+        </div>
+        <div class="row justify-content-md-center">
+            <div id="results" class="col-md-auto"></div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            $("#submit").click(function(event) {
+                event.preventDefault();
+                console.log("we did it");
+                $.ajax({
+                    type: "GET",
+                    url: "https://query.yahooapis.com/v1/public/yql?q=select * from weather.forecast where woeid in (select woeid from geo.places(1) where text='" + $("#zipcode").val() + "')",
+                    dataType: "json",
+                    data: {
+                        format: 'json'
+                    },
+                    success: function(response) {
+                        console.log("WE REALLY OUT HERE");
+                        console.log(response);
+                        if(response.query.results === null){
+                            $("#results").empty();
+                            $("#results").text("Oops there is something wrong with your entry");
+                        }
+                        else{
+                            console.log(response);
+                            var condition = response.query.results.channel.item.condition.text;
+                            var location = response.query.results.channel.location.city + ", " + response.query.results.channel.location.region + ", " + response.query.results.channel.location.country;
+                            $("#results").text("It is now " + condition + " in the city of " + location + ".");
+                        }
+                    },
+                    error: function(response) {
+                        console.log("STOP THIS PLEASE");
+                    }
+                });
+            })
+        })
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+
+</html>
