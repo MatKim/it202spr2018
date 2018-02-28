@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Shitty drawing </title>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="1920" height="1080" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+    <script>
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+        ctx.beginPath();
+        ctx.moveTo(50, 150);
+        ctx.lineTo(50, 0);
+        ctx.lineTo(75, 75);
+        ctx.lineTo(100, 0);
+        ctx.lineTo(100, 150);
+        ctx.moveTo(200, 0);
+        ctx.lineTo(200, 150);
+        ctx.moveTo(200, 75);
+        ctx.lineTo(250, 0);
+        ctx.moveTo(200, 75);
+        ctx.lineTo(250, 150);
+        ctx.stroke();
+    </script>
+</body>
+
+</html>
