@@ -27,6 +27,7 @@
     <div id="home" class="container jumbotron">
         <h1>HELLO THIS IS A MAP GENERATOR FOR CTA SCHOOLS</h1>
         <p>Hit the start to go search for specific school types</p>
+        <p>Make sure to pick at least one school type and hit search when you are done</p>
         <button class="btn btn-primary" id="start" type="button">Start</button>
     </div>
     <div id="search" class="container">
@@ -96,7 +97,7 @@
                 $("#search").show();
                 $("#map").hide();
                 $("#restartsearch").hide();
-                $('input:checkbox').removeAttr('checked');
+                $("input:checkbox").prop('checked', false);
             });
 
             function clearMap() {
@@ -133,6 +134,7 @@
                                 origin: new google.maps.Point(0, 0), // origin
                                 anchor: new google.maps.Point(0, 0) // anchor
                             };
+                            console.log(response[i].short_name)
                             var marker = new google.maps.Marker({
                                 position: { lat: parseFloat(response[i].school_latitude), lng: parseFloat(response[i].school_longitude) },
                                 map: map,
