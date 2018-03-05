@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Project 2</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+        html,
+        body {
+            background-image: url("https://chicagotonight.wttw.com/sites/default/files/article/image-non-gallery/CPS_606_1.jpg");
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #home, #search {
+            background: white;
+            outline: 5px green;
+            display: block;
+            margin: auto;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="home" class="container jumbotron">
+        <h1>HELLO THIS IS A MAP GENERATOR FOR CTA SCHOOLS</h1>
+        <p>Hit the start to go search for specific school types</p>
+        <button class="btn btn-primary" id="start" type="button">Start</button>
+    </div>
+    <div id="search" class="container">
+        <fieldset id="list">
+            <legend>Choose your school type</legend>
+        </fieldset>
+        <button class="btn btn-primary" id="startSearch">Search</button>
+    </div>
+    <div id="restartsearch" class="container">
+        <button class="btn btn-primary" type="button" id="searchAgain">Search again???</button>
+    </div>
+    <div id="map" style="height:100%; width:100%;"></div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+    <script>
+        var markers = [];
+        var map;
+        var icons = {
+            "Career academy": "https://upload.wikimedia.org/wikipedia/en/6/67/DeVry-University-Logo.png",
+            "Charter": "https://futurelibraries.net/wp-content/uploads/2017/06/Money-Sign-Golden-CLEAR-250px-PNG24-NOINF-OPTIMIZED.png",
+            "Citywide-Option": "http://api.ning.com/files/zNSLWuvsJ1JFclTnwaRT3*WeJRTgDBg2nYz1y*2Mr6jcZ146BAlme-UBcY6BMyR0tq3QLYE0cqhfx6Cb7CrjBEFfGg73PvFj/lilbsun.jpg?width=225",
+            "Classical": "http://dev.linguisticteam.org/app/uploads/2015/03/composer-400x267.png",
+            "Contract": "https://www.pmbypm.com/wp-content/uploads/2016/01/contract-types-ID-100349132_freedigital-300x200.jpg",
+            "Magnet": "https://cdn3.iconfinder.com/data/icons/classic-icons-1/512/12.png",
+            "Military academy": "https://foreignpolicymag.files.wordpress.com/2017/11/gettyimages-76377852.jpg?w=1500&h=1000&crop=0,0,0,0",
+            "Neighborhood": "https://images-na.ssl-images-amazon.com/images/I/51oANy9SqBL.jpg",
+            "Regional gifted center": "https://images.homedepot-static.com/productImages/52789855-f8d2-4b18-80ac-f60f5fea75b4/svn/ge-incandescent-light-bulbs-30-100rvl-htp2-6-64_1000.jpg",
+            "Selective enrollment": "https://weirdscholarships.net/wp-content/uploads/2015/07/Caucasian_students.62152213_std.jpg",
+            "Small": "https://media.gettyimages.com/photos/small-picture-id182755715",
+            "Special Education": "http://churchofchristarticles.com/blog/wp-content/uploads/2018/01/Screen-Shot-2016-09-21-at-10.43.05-PM1.png"
+        };
+        $(document).ready(function() {
+            $("#home").show();
+            $("#search").hide();
+            $("#map").hide();
+            $("#restartsearch").hide();
+            $("#start").click(function() {
+                $("#home").css("display", "none");
+                $("#search").css("display", "block");
+                $.ajax({
+                    url: "https://data.cityofchicago.org/resource/76dk-7ieb.json?$select=school_type&&$group=school_type",
+                    dataType: "json",
+                    success: function(response) {
+                        for (var i = 0; i < response.length; i++) {
+                            var school_type = response[i].school_type;
+                            var contentString = "<div><input type='checkbox' id='" + school_type + "' name='schoolsearch' value='" + school_type + "'>" +
+                                "<label for='" + school_type + "'> " + school_type + "</label></div>";
+                            $("#search").append(contentString);
+                        }
+                    }
+                });
+            });
+            $("#startSearch").click(function() {
+                var selected = $("input[name='schoolsearch']").serializeArray();
+                if (selected.length === 0) {
+                    alert('Please select at least one');
+                    return false;
+                }
+                else {
+                    addMarkers(selected);
+                }
+            });
+            $("#searchAgain").click(function() {
+                $("#search").show();
+                $("#map").hide();
+                $("#restartsearch").hide();
+                $('input:checkbox').removeAttr('checked');
+            });
+
+            function clearMap() {
+                for (var i = 0; i < markers.length; i++) {
+                    markers[i].setMap(null);
+                }
+                markers.length = 0;
+            }
+
+            function addMarkers(selected) {
+                clearMap();
+                var url = "https://data.cityofchicago.org/resource/76dk-7ieb.json?$where=school_type IN (";
+                console.log(selected);
+                for (var i = 0; i < selected.length; i++) {
+                    url += "'" + selected[i].value + "'";
+                    if (i !== selected.length - 1) {
+                        url += ", ";
+                    }
+                }
+                url += ")";
+                console.log(url);
+                $.ajax({
+                    url: url,
+                    dataType: "json",
+                    success: function(response) {
+                        console.log(response);
+                        $("#search").hide();
+                        $("#restartsearch").show()
+                        $("#map").show();
+                        for (var i = 0; i < response.length; i++) {
+                            var icon = {
+                                url: icons[response[i].school_type], // url
+                                scaledSize: new google.maps.Size(35, 35), // scaled size
+                                origin: new google.maps.Point(0, 0), // origin
+                                anchor: new google.maps.Point(0, 0) // anchor
+                            };
+                            var marker = new google.maps.Marker({
+                                position: { lat: parseFloat(response[i].school_latitude), lng: parseFloat(response[i].school_longitude) },
+                                map: map,
+                                title: response[i].short_name,
+                                icon: icon
+                            });
+                            markers.push(marker);
+                        }
+                    }
+                });
+            }
+        });
+
+        function initMap() {
+            var chicago = { lat: 41.8781, lng: -87.6298 };
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 10,
+                center: chicago
+            });
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD8I7VsFDrT4MQnaZL5isRjc4dbkfl-SQw&callback=initMap"></script>
+</body>
+
+</html>
