@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>repl.it</title>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="575" height="575"></canvas>
+    <script>
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+
+        var playerSpawn = { x: 75, y: 110 };
+
+        var game = { lives: 3, score: 0 };
+        var player = { x: 75, y: 110, color: "green", radius: 25, src: "http://pngimg.com/uploads/ant/ant_PNG19345.png" };
+        var harm = { x: c.width, y: 100, color: "blue", radius: 25, src: "http://pngimg.com/uploads/spider/spider_PNG45.png" };
+        var powerup = { x: c.width, y: 400, color: "red", radius: 20, src: "http://pngimg.com/uploads/sugar/sugar_PNG33.png" };
+
+        var score = 0;
+
+        var gameover = false;
+        var pause = false;
+
+        function draw() {
+            ctx.clearRect(0, 0, c.width, c.height);
+            ctx.beginPath();
+            var bg = new Image(575, 575);
+            bg.src = "http://www.photos-public-domain.com/wp-content/uploads/2012/03/cement-texture.jpg";
+            ctx.drawImage(bg, 0, 0);
+            ctx.fill();
+            if (pause == true) {
+                var pauseText = "PAUSE"
+                ctx.fillText(pauseText, 100, 100);
+                requestAnimationFrame(draw);
+            }
+            else {
+                // draw harm
+                if (game.score < 3000) {
+                    harm.x--;
+                }
+                else if (game.score < 6000) {
+                    harm.x -= 2;
+                }
+                else {
+                    harm.x -= 3;
+                }
+                if (harm.x <= 0) {
+                    harm.x = c.width;
+                    harm.y = Math.floor(Math.random() * 575);
+                }
+                powerup.x--;
+                if (powerup.x <= 0) {
+                    powerup.x = c.width
+                }
+                fillObjects(harm);
+
+                // collision check, using code from 
+                //   https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+
+                var dx = player.x - harm.x;
+                var dy = player.y - harm.y;
+                var distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < player.radius + harm.radius) {
+                    // collision detected!
+                    console.log("collision");
+
+                    harm.x = c.width; // reposition harm 
+                    harm.y = Math.floor(Math.random() * 575);
+                    game.lives--; // reduce lives
+
+                    player.x = playerSpawn.x;
+                    player.y = playerSpawn.y;
+                    // TODO: handle game over condition
+
+
+                    console.log(game);
+                }
+                dx = player.x - powerup.x;
+                dy = player.y - powerup.y;
+                distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < player.radius + powerup.radius) {
+                    // collision detected!
+                    console.log("collision");
+                    game.lives += 1; // reduce lives
+                    game.score += 1000
+                    powerup.y = Math.floor(Math.random() * 575);
+                    powerup.x = c.width;
+                    console.log(game);
+                }
+
+                // TODO:  draw benefit
+
+
+
+
+
+
+                // draw player
+                fillObjects(player);
+                fillObjects(powerup);
+                fillObjects(harm);
+
+                // TODO:  draw score and lives
+
+
+
+
+                ctx.font = "30px Arial";
+                ctx.fillStyle = "red";
+                if (game.lives > 0) {
+                    var scoreText = "Score: " + game.score + "  Lives: " + game.lives;
+                }
+                else {
+                    var scoreText = "GAME OVER\n YOUR SCORE WAS " + game.score;
+                    gameover = true;
+                }
+                ctx.fillText(scoreText, 10, 50);
+                if (gameover == false) {
+                    game.score++;
+                    requestAnimationFrame(draw);
+                }
+            }
+        }
+
+        function fillObjects(object) {
+            ctx.fillStyle = object.color;
+            var bg = new Image(100, 100);
+            bg.src = object.src;
+            ctx.drawImage(bg, object.x, object.y, object.radius * 3, object.radius * 3);
+            ctx.fill();
+        }
+
+
+
+        draw();
+
+        // TODO:  keyboard events to change player y coordinate
+        //   function moveY(){
+        $(document).keydown(function(e) {
+            console.log(e);
+            if (gameover == true) {
+                return;
+            }
+            e.preventDefault();
+            if (e.keyCode == 38) {
+                if (player.y > 25) {
+                    console.log("Up arrow key has been pressed.")
+                    player.y = player.y - 5;
+                }
+            }
+            else if (e.keyCode == 40) {
+                if (player.y < 575) {
+                    console.log("Down arrow key has been pressed.")
+                    player.y = player.y + 5;
+                }
+            }
+            else if (e.keyCode == 32) {
+                console.log("space has been pressed");
+                if (pause == true)
+                    pause = false;
+                else
+                    pause = true;
+                console.log(pause);
+            }
+        });
+        //   }
+
+
+        // TODO:  space bar to pause game
+    </script>
+
+</body>
+
+</html>
