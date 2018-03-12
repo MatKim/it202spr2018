@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+
+<head>
+    <!-- Include Dexie -->
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+    <script>
+        var db = new Dexie("Restaurants");
+        db.version(1).stores({
+            resteraunts: "name, cuisine"
+        });
+
+        db.resteraunts.put({ name: "GANG", cuisine: "Soul Food" });
+        db.resteraunts.put({ name: "6ix9ine", cuisine: "Scumgang" });
+        db.resteraunts.put({ name: "Khao San", cuisine: "Thai" });
+    </script>
+
+</head>
+
+<body>
+    <div id="search">
+        Resteraunt finder: <br>
+         <button onclick="dbOnload()">Find Non-Thai Restaurants</button> 
+    </div>
+    <div id="data"></div>
+    <script>
+        var html = "";
+        function dbOnload() {
+            db.resteraunts.where("cuisine").noneOf("Thai").each(function(element) {
+                console.log(element);
+                html += "Resteraunt: " + element.name + "   Cuisine: " + element.cuisine + "<br>";
+            })
+            console.log(html);
+            document.getElementById("data").innerHTML = html;
+            html = "";
+        }
+    </script>
+</body>
+
+</html>
