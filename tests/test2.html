@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<head>
+    <title>Test 2</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <div id="citypeople">
+        <h1>LIST OF ALL PEOPLE WHO WORK FOR THE CITY COUNCIL PART TIME:</h1>
+    </div>
+    <script>
+        $.ajax({
+            url:"https://data.cityofchicago.org/resource/tt4n-kn4t.json?$where=full_or_part_time%20=%20%22P%22%20AND%20department%20=%20%22CITY%20COUNCIL%22",
+            dataType: "json",
+            success: function(response){
+                for(var i = 0; i < response.length; i++){
+                    var html = "<p> Name:" + response[i].name + ", Job Title: " + response[i].job_titles + "<p>"
+                    $("#citypeople").append(html);
+                }        
+            }
+        })
+    </script>
+</body>
