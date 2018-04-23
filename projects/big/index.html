@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>The Forme of Cury</title>
+    <link href="./material-components-web.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="./js/d3pie.js"></script>
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+        }
+
+        .page {
+            position: relative;
+            height: 100vh;
+        }
+
+        #search-area {
+            padding: 10px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            opacity: 0.75;
+        }
+
+        #video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #results,
+        #recipe-info {
+            position: relative;
+            background: white;
+            top: 5%;
+        }
+
+        #location {
+            background: white;
+        }
+    </style>
+</head>
+
+<body class="mdc-typography">
+    <header class="mdc-toolbar">
+        <div class="mdc-top-app-bar__row">
+            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                <a href="#" class="material-icons mdc-top-app-bar__navigation-icon">
+                    <i class="material-icons">list</i>
+                </a>
+                <span class="mdc-top-app-bar__title">The Forme of Cury</span>
+            </section>
+        </div>
+    </header>
+    <main>
+        <video autoplay muted loop id="video">
+          <source src="cooking.mp4" type="video/mp4">
+        </video>
+        <div id="search" class="page">
+            <section id="search-area">
+                <div class="mdc-text-field" data-mdc-auto-init="MDCTextField">
+                    <input class="mdc-text-field__input" id="search-field" aria-controls="my-text-field-helper-text" type="text">
+                    <label for="search-field" class="mdc-floating-label">Search for Recipes</label>
+                    <div class="mdc-line-ripple" style="transform-origin: 171px center 0px;"></div>
+                </div>
+                <button class="mdc-button" id="searchButton">
+                    Search
+                </button><br> History:
+                <ul id="history" class="mdc-list"></ul>
+                <button class="mdc-button" id="clearButton">
+                    Clear
+                </button><br>
+            </section>
+        </div>
+        <div id="search-result" class="page">
+            <section id="results">
+                <button class="mdc-button" id="backToSearch">
+                    <i class="material-icons">keyboard_backspace</i>
+                </button>
+                <ul id="resultList" class="mdc-list mdc-list--two-line">
+                </ul>
+            </section>
+        </div>
+        <div id="recipe" class="page">
+            <section id="recipe-info">
+                <button class="mdc-button" id="backToRecipes">
+                    <i class="material-icons">keyboard_backspace</i>
+                </button>
+                <h1 id="recipeTitle"></h1>
+                <img id="recipeImage" src="" /><br> Ingredients:
+                <ul id="ingredients" class="mdc-list">
+                </ul>
+                Health Labels:
+                <ul id="healthLabels" class="mdc-list">
+                </ul>
+                Preparation:<br>
+                <a id="linkToRecipe" href="">Link to Recipe</a><br> Estimated Time:
+                <p id="estimatedTime"></p>
+                Nutrition Facts:
+                <ul id="nutritionFacts" class="mdc-list mdc-list--two-line"></ul>
+                Macros:
+                <div id="piechart"></div>
+            </section>
+        </div>
+        <div id="location" class="page" style="width:100%; height:100%;">
+            <div id="map" style="width:100%; height:100vh;"></div>
+        </div>
+        <aside class="mdc-drawer mdc-drawer--temporary mdc-typography" data-mdc-auto-init="MDCTemporaryDrawer">
+            <nav class="mdc-drawer__drawer">
+                <header class="mdc-drawer__header">
+                    <div class="mdc-drawer__header-content">
+                        Cookbook
+                    </div>
+                </header>
+                <nav id="icon-with-text-demo" class="mdc-drawer__content mdc-list">
+                    <a class="mdc-list-item mdc-list-item--activated" href="#" data-screen="search">
+                        <i class="material-icons mdc-list-item__graphic" aria-hidden="true">search</i>Search
+                    </a>
+                    <a class="mdc-list-item mdc-list-item--activated" href="#" data-screen="location">
+                        <i class="material-icons mdc-list-item__graphic" aria-hidden="true">map</i>Get Grocery Locations
+                    </a>
+                </nav>
+
+            </nav>
+        </aside>
+    </main>
+    <script src="./material-components-web.js"></script>
+    <script src="./js/database.js"></script>
+    <script src="./js/events.js"></script>
+    <script src="./js/geolocation.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./serviceworker.js').then(function(registration) {
+                    // Registration was successful
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    // registration failed :(
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        mdc.autoInit()
+
+        let drawer = new mdc.drawer.MDCTemporaryDrawer(document.querySelector('.mdc-drawer--temporary'));
+        document.querySelector('.mdc-top-app-bar__navigation-icon').addEventListener('click', () => drawer.open = true);
+
+        var drawerLinks = document.querySelectorAll('.mdc-list-item');
+
+        for (var i = 0; i < drawerLinks.length; i++) {
+
+            drawerLinks[i].addEventListener('click', (e) => {
+
+                var screen;
+                var attributes = e.target.attributes;
+
+                for (var i = 0; i < attributes.length; i++) {
+                    console.log(attributes[i].name, attributes[i].value);
+                    if (attributes[i].name == "data-screen") {
+                        screen = attributes[i].value;
+                    }
+                }
+                drawer.open = false;
+                showScreen(screen);
+            });
+        }
+
+        function showScreen(id) {
+            $(".page").each(function(index, value) {
+                $(value).hide();
+            });
+            var currPage = "#" + id;
+            $(currPage).show();
+            if (id === "search") {
+                getHistory()
+            }
+        }
+        getHistory();
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD8I7VsFDrT4MQnaZL5isRjc4dbkfl-SQw&callback=initMap&libraries=places">
+    </script>
+</body>
+
+</html>
