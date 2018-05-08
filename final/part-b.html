@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>IT 202 Part B final </title>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <form id="options">
+        <input type="radio" name="clinics" value="STI Specialty Clinic" checked> STI Specialty Clinic<br>
+        <input type="radio" name="clinics" value="Mental Health Clinic"> Mental Health Clinic<br>
+        <input type="radio" name="clinics" value="WIC Clinic"> WIC Clinic<br><br>
+    </form>
+    <button id="search">Search</button>
+    <div id="list" class="list-group">
+
+    </div>
+    <div id="map" style="height:50vh; width:100%;"></div>
+</body>
+<script>
+    var markers = [];
+    var madeMarkers = [];
+    var map;
+    $(document).ready(function() {
+        $("#search").click(function() {
+            console.log($('input[name=clinics]:checked').val());
+            $.ajax({
+                url: "https://data.cityofchicago.org/resource/t57k-za2y.json?$where=clinic_type='" + $('input[name=clinics]:checked').val() + "'",
+                success: function(response) {
+                    console.log(response);
+                    $.each(response, function(index, value) {
+                        var html = '<a href="#" class="list-group-item list-group-item-action flex-column align-items-start active"><div class="d-flex w-100 justify-content-between">' +
+                            '<h5 class="mb-1">' + value.site_name + "</h5><small>" + value.clinic_type + "</small>" + '</div><p class="mb-1">' + value.street_address + "<br>" + value.city + ", " + value.state + " " + value.zip + "<br>" + value.phone_1 +
+                            "</p>" + "<small>" + value.hours_of_operation + "</small></a>";
+                        $("#list").append(html);
+                        var coord = { long: value.longitude, lat: value.latitude, name: value.site_name, html: html };
+                        markers.push(coord);
+                    })
+                    $.each(markers, function(index, value) {
+                        var marker = new google.maps.Marker({
+                            position: { lat: parseFloat(value.lat), lng: parseFloat(value.long) },
+                            map: map,
+                            title: value.name,
+                        });
+                        var infowindow = new google.maps.InfoWindow({
+                            content: value.html
+                        });
+                        marker.addListener('click', function() {
+                            infowindow.open(map, marker);
+                        });
+
+                    });
+                    console.log(markers);
+                }
+            });
+        });
+    });
+
+    function initMap() {
+        var chicago = { lat: 41.8781, lng: -87.6298 };
+        map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 10,
+            center: chicago
+        });
+
+
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD8I7VsFDrT4MQnaZL5isRjc4dbkfl-SQw&callback=initMap"></script>
+
+</html>
